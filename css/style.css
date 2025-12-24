@@ -818,3 +818,21 @@ h1, h2, h3 {
         font-size: 1.5rem;
     }
 }
+
+/* Game Code Big Display */
+.game-code-big {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-gold);
+    margin: 15px 0;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 5px;
+}
+
+#qrCode img {
+    display: block;
+    margin: 0 auto;
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+}
