@@ -10,6 +10,12 @@ class AvalonPlayer {
         this.playerRef = null;
         this.gameState = null;
         this.myRole = null;
+        this.hasRevealedRole = false;
+
+        console.log('AvalonPlayer initialized');
+        console.log('Game Code:', this.gameCode);
+        console.log('Player Name:', this.playerName);
+        console.log('Player ID:', this.playerId);
 
         this.init();
     }
@@ -32,18 +38,24 @@ class AvalonPlayer {
 
         document.getElementById('displayName').textContent = this.playerName;
 
-        this.gameRef = getGameRef(this.gameCode);
-        this.playerRef = this.gameRef.child(`players/${this.playerId}`);
+        try {
+            this.gameRef = getGameRef(this.gameCode);
+            this.playerRef = this.gameRef.child(`players/${this.playerId}`);
 
-        // Check if game exists
-        this.gameRef.once('value', (snapshot) => {
-            if (!snapshot.exists()) {
-                alert('Game not found!');
-                window.location.href = 'index.html';
-                return;
-            }
-            this.joinGame();
-        });
+            // Check if game exists
+            this.gameRef.once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    alert('Game not found! Code: ' + this.gameCode);
+                    window.location.href = 'index.html';
+                    return;
+                }
+                console.log('Game found, joining...');
+                this.joinGame();
+            });
+        } catch (error) {
+            console.error('Firebase error:', error);
+            alert('Error connecting: ' + error.message);
+        }
     }
 
     joinGame() {
@@ -52,6 +64,10 @@ class AvalonPlayer {
             name: this.playerName,
             joinedAt: Date.now(),
             ready: false
+        }).then(() => {
+            console.log('Joined game successfully');
+        }).catch((error) => {
+            console.error('Error joining game:', error);
         });
 
         // Remove on disconnect
@@ -60,7 +76,16 @@ class AvalonPlayer {
         // Listen for game changes
         this.gameRef.on('value', (snapshot) => {
             this.gameState = snapshot.val();
+            console.log('Game state updated:', this.gameState);
+            
             if (this.gameState) {
+                // Check if I have a role assigned
+                const myData = this.gameState.players?.[this.playerId];
+                if (myData?.role) {
+                    this.myRole = myData.role;
+                    console.log('My role:', this.myRole);
+                }
+                
                 this.handleGameStateChange();
             }
         });
@@ -71,8 +96,18 @@ class AvalonPlayer {
     setupEventListeners() {
         // Role card flip
         document.getElementById('roleCard').addEventListener('click', () => {
+            if (!this.myRole) {
+                console.log('No role assigned yet');
+                return;
+            }
+            
             document.getElementById('roleCard').classList.add('flipped');
-            document.getElementById('readyBtn').classList.remove('hidden');
+            this.hasRevealedRole = true;
+            
+            // Show ready button after flip
+            setTimeout(() => {
+                document.getElementById('readyBtn').classList.remove('hidden');
+            }, 600);
         });
 
         // Ready button
@@ -111,11 +146,7 @@ class AvalonPlayer {
 
     handleGameStateChange() {
         const phase = this.gameState.phase;
-        const myData = this.gameState.players?.[this.playerId];
-
-        if (myData?.role && !this.myRole) {
-            this.myRole = myData.role;
-        }
+        console.log('Current phase:', phase);
 
         // Hide all screens
         document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -160,9 +191,18 @@ class AvalonPlayer {
     }
 
     updateStatusBar() {
-        if (!this.myRole) return;
+        if (!this.myRole) {
+            document.getElementById('statusRole').textContent = 'No role yet';
+            return;
+        }
 
         const role = AVALON.ROLES[this.myRole];
+        if (!role) {
+            console.error('Unknown role:', this.myRole);
+            document.getElementById('statusRole').textContent = 'Unknown role';
+            return;
+        }
+
         const statusRole = document.getElementById('statusRole');
         statusRole.textContent = role.icon + ' ' + role.name;
         statusRole.className = 'status-role ' + role.team;
@@ -179,28 +219,53 @@ class AvalonPlayer {
     }
 
     showMyRole() {
-        if (!this.myRole) return;
+        console.log('showMyRole called, myRole:', this.myRole);
+        
+        if (!this.myRole) {
+            console.log('No role assigned yet');
+            document.getElementById('roleName').textContent = 'Loading...';
+            return;
+        }
 
-        const roleInfo = AVALON.getRoleInfo(this.myRole, this.gameState.players);
         const role = AVALON.ROLES[this.myRole];
+        if (!role) {
+            console.error('Unknown role key:', this.myRole);
+            document.getElementById('roleName').textContent = 'Error: Unknown Role';
+            return;
+        }
 
+        console.log('Displaying role:', role);
+
+        // Set role info
         document.getElementById('roleName').textContent = role.name;
         document.getElementById('roleIcon').textContent = role.icon;
         document.getElementById('roleTeam').textContent = 
-            role.team === 'good' ? 'Loyal Servant of Arthur' : 'Minion of Mordred';
+            role.team === 'good' ? '🔵 Loyal Servant of Arthur' : '🔴 Minion of Mordred';
 
+        // Set card color based on team
         const cardBack = document.querySelector('.role-card-back');
-        cardBack.className = 'role-card-back ' + role.team;
+        cardBack.classList.remove('good', 'evil');
+        cardBack.classList.add(role.team);
 
-        // Show role info
+        // Show role info (what this role knows)
+        const roleInfo = AVALON.getRoleInfo(this.myRole, this.gameState.players);
         let infoHTML = `<p>${role.description}</p>`;
-        if (roleInfo.knows && roleInfo.knows.length > 0) {
-            infoHTML += `<p style="margin-top: 15px;"><strong>${roleInfo.knowsLabel}</strong></p>`;
-            infoHTML += roleInfo.knows.map(p => `<p>• ${p.name}</p>`).join('');
-        } else if (roleInfo.knowsLabel && role.team !== 'good') {
+        
+        if (roleInfo && roleInfo.knows && roleInfo.knows.length > 0) {
+            infoHTML += `<p style="margin-top: 15px; font-weight: bold;">${roleInfo.knowsLabel}</p>`;
+            infoHTML += '<ul style="list-style: none; padding: 0; margin-top: 10px;">';
+            roleInfo.knows.forEach(p => {
+                infoHTML += `<li style="padding: 5px 0;">👤 ${p.name}</li>`;
+            });
+            infoHTML += '</ul>';
+        } else if (roleInfo && roleInfo.knowsLabel && role.team === 'evil') {
             infoHTML += `<p style="margin-top: 15px;">${roleInfo.knowsLabel}</p>`;
         }
+        
         document.getElementById('roleInfo').innerHTML = infoHTML;
+
+        // Update front card text
+        document.querySelector('.role-card-front p').textContent = '👆 Tap to reveal your role';
     }
 
     showTeamSelectionPhase() {
@@ -208,13 +273,14 @@ class AvalonPlayer {
         document.querySelectorAll('.game-panel').forEach(p => p.classList.add('hidden'));
 
         const isKing = this.gameState.currentKing === this.playerId;
+        console.log('Is King:', isKing);
 
         if (isKing) {
             document.getElementById('teamSelectionPanel').classList.remove('hidden');
             this.setupTeamSelection();
         } else {
             document.getElementById('waitingKingPanel').classList.remove('hidden');
-            const kingName = this.gameState.players[this.gameState.currentKing]?.name;
+            const kingName = this.gameState.players[this.gameState.currentKing]?.name || 'Unknown';
             document.getElementById('currentKingName').textContent = kingName;
         }
     }
@@ -240,6 +306,8 @@ class AvalonPlayer {
 
         // Selection logic
         let selected = [];
+        const confirmBtn = document.getElementById('confirmTeamBtn');
+        
         container.querySelectorAll('.player-select-item').forEach(item => {
             item.addEventListener('click', () => {
                 const id = item.dataset.playerId;
@@ -250,7 +318,7 @@ class AvalonPlayer {
                     item.classList.add('selected');
                     selected.push(id);
                 }
-                document.getElementById('confirmTeamBtn').disabled = selected.length !== teamSize;
+                confirmBtn.disabled = selected.length !== teamSize;
             });
         });
 
@@ -261,6 +329,8 @@ class AvalonPlayer {
     confirmTeamSelection() {
         const team = this.selectedTeam?.() || [];
         if (team.length === 0) return;
+
+        console.log('Confirming team:', team);
 
         this.gameRef.update({
             selectedTeam: team,
@@ -283,13 +353,15 @@ class AvalonPlayer {
             const team = this.gameState.selectedTeam || [];
             document.getElementById('proposedTeam').innerHTML = team
                 .map(id => {
-                    const name = this.gameState.players[id]?.name;
-                    return `<span class="team-member">${name}</span>`;
+                    const name = this.gameState.players[id]?.name || 'Unknown';
+                    const isMe = id === this.playerId;
+                    return `<span class="team-member ${isMe ? 'is-me' : ''}">${name}${isMe ? ' (You)' : ''}</span>`;
                 }).join('');
         }
     }
 
     submitVote(vote) {
+        console.log('Submitting vote:', vote);
         this.gameRef.child(`votes/${this.playerId}`).set(vote);
         document.getElementById('votingPanel').classList.add('hidden');
         document.getElementById('waitingVotesPanel').classList.remove('hidden');
@@ -300,14 +372,13 @@ class AvalonPlayer {
 
         const team = this.gameState.selectedTeam || [];
         const isOnMission = team.includes(this.playerId);
-        const cards = this.gameState.missionCards || [];
-        const hasSubmitted = cards.length > team.indexOf(this.playerId);
+
+        console.log('Is on mission:', isOnMission);
 
         if (isOnMission) {
-            // Check if already submitted (simple check)
-            const missionSubmitted = localStorage.getItem(
-                `mission_${this.gameCode}_${this.gameState.currentMission}_${this.playerId}`
-            );
+            // Check if already submitted
+            const missionKey = `mission_${this.gameCode}_${this.gameState.currentMission}_${this.playerId}`;
+            const missionSubmitted = localStorage.getItem(missionKey);
 
             if (missionSubmitted) {
                 document.getElementById('waitingMissionPanel').classList.remove('hidden');
@@ -328,11 +399,11 @@ class AvalonPlayer {
     }
 
     submitMissionCard(card) {
+        console.log('Submitting mission card:', card);
+
         // Mark as submitted locally
-        localStorage.setItem(
-            `mission_${this.gameCode}_${this.gameState.currentMission}_${this.playerId}`,
-            'true'
-        );
+        const missionKey = `mission_${this.gameCode}_${this.gameState.currentMission}_${this.playerId}`;
+        localStorage.setItem(missionKey, 'true');
 
         // Add card to array
         this.gameRef.child('missionCards').transaction((cards) => {
@@ -349,6 +420,7 @@ class AvalonPlayer {
         document.querySelectorAll('.game-panel').forEach(p => p.classList.add('hidden'));
 
         const isAssassin = this.myRole === 'ASSASSIN';
+        console.log('Is Assassin:', isAssassin);
 
         if (isAssassin) {
             document.getElementById('assassinationPanel').classList.remove('hidden');
@@ -372,21 +444,27 @@ class AvalonPlayer {
         `).join('');
 
         let selectedTarget = null;
+        const confirmBtn = document.getElementById('confirmKillBtn');
+        
         container.querySelectorAll('.player-select-item').forEach(item => {
             item.addEventListener('click', () => {
                 container.querySelectorAll('.player-select-item').forEach(i => 
                     i.classList.remove('selected'));
                 item.classList.add('selected');
                 selectedTarget = item.dataset.playerId;
+                confirmBtn.disabled = false;
             });
         });
 
+        confirmBtn.disabled = true;
         this.assassinTarget = () => selectedTarget;
     }
 
     confirmAssassination() {
         const target = this.assassinTarget?.();
         if (!target) return;
+
+        console.log('Assassinating:', target);
 
         const targetRole = this.gameState.players[target]?.role;
         const isMerlin = targetRole === 'MERLIN';
@@ -396,7 +474,7 @@ class AvalonPlayer {
             winner: isMerlin ? 'evil' : 'good',
             winReason: isMerlin 
                 ? 'The Assassin found and killed Merlin!' 
-                : 'The Assassin failed to find Merlin!',
+                : 'The Assassin failed to find Merlin! Good wins!',
             assassinatedPlayer: target
         });
     }
@@ -415,12 +493,15 @@ class AvalonPlayer {
             didWin ? 'var(--color-success)' : 'var(--color-fail)';
 
         const role = AVALON.ROLES[this.myRole];
-        document.getElementById('yourRoleReveal').textContent = 
-            `You were ${role.name} (${role.team === 'good' ? 'Good' : 'Evil'})`;
+        document.getElementById('yourRoleReveal').innerHTML = `
+            <p>You were <strong>${role?.icon} ${role?.name}</strong></p>
+            <p style="margin-top: 10px;">${this.gameState.winReason || ''}</p>
+        `;
     }
 }
 
-// Initialize
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing AvalonPlayer...');
     new AvalonPlayer();
 });
