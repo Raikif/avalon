@@ -7,6 +7,9 @@ class AvalonHost {
         this.players = {};
         this.gameState = null;
 
+        console.log('AvalonHost initialized');
+        console.log('Game Code from URL:', this.gameCode);
+
         this.init();
     }
 
@@ -17,16 +20,58 @@ class AvalonHost {
             return;
         }
 
-        this.gameRef = getGameRef(this.gameCode);
-        this.setupGame();
-        this.setupListeners();
-        this.generateQRCode();
+        // Tampilkan game code langsung
         this.updateGameCodeDisplay();
+        this.generateQRCode();
+
+        // Setup Firebase
+        try {
+            this.gameRef = getGameRef(this.gameCode);
+            console.log('Firebase ref created:', this.gameRef);
+            this.setupGame();
+            this.setupListeners();
+        } catch (error) {
+            console.error('Firebase error:', error);
+            alert('Error connecting to Firebase: ' + error.message);
+        }
+    }
+
+    getBaseUrl() {
+        // Untuk GitHub Pages, kita perlu include path lengkap
+        const url = window.location.href;
+        // Hapus 'host.html' dan query string
+        const baseUrl = url.split('host.html')[0];
+        return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    }
+
+    generateQRCode() {
+        const baseUrl = this.getBaseUrl();
+        const joinUrl = `${baseUrl}/player.html?code=${this.gameCode}`;
+        
+        console.log('Base URL:', baseUrl);
+        console.log('Join URL:', joinUrl);
+
+        // Tampilkan URL
+        document.getElementById('joinUrl').textContent = joinUrl;
+        document.getElementById('gameCodeBig').textContent = `Code: ${this.gameCode}`;
+
+        // Gunakan QR Code API (tidak perlu library eksternal)
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinUrl)}`;
+        
+        const qrContainer = document.getElementById('qrCode');
+        qrContainer.innerHTML = `<img src="${qrApiUrl}" alt="QR Code" style="border-radius: 8px;">`;
+        
+        console.log('QR Code generated');
+    }
+
+    updateGameCodeDisplay() {
+        document.getElementById('gameCodeDisplay').textContent = this.gameCode;
+        console.log('Game code displayed:', this.gameCode);
     }
 
     setupGame() {
         // Initialize game in Firebase
-        this.gameRef.set({
+        const gameData = {
             code: this.gameCode,
             phase: AVALON.PHASES.LOBBY,
             players: {},
@@ -44,7 +89,16 @@ class AvalonHost {
             votes: {},
             missionCards: [],
             createdAt: Date.now()
-        });
+        };
+
+        this.gameRef.set(gameData)
+            .then(() => {
+                console.log('Game created in Firebase successfully');
+            })
+            .catch((error) => {
+                console.error('Error creating game:', error);
+                alert('Error creating game: ' + error.message);
+            });
 
         // Clean up on disconnect
         this.gameRef.onDisconnect().remove();
@@ -54,6 +108,7 @@ class AvalonHost {
         // Listen for player changes
         this.gameRef.child('players').on('value', (snapshot) => {
             this.players = snapshot.val() || {};
+            console.log('Players updated:', this.players);
             this.updatePlayersDisplay();
             this.updateStartButton();
         });
@@ -61,6 +116,7 @@ class AvalonHost {
         // Listen for game state changes
         this.gameRef.on('value', (snapshot) => {
             this.gameState = snapshot.val();
+            console.log('Game state updated:', this.gameState);
             if (this.gameState) {
                 this.handleGameStateChange();
             }
@@ -89,25 +145,6 @@ class AvalonHost {
         document.getElementById('newGameBtn').addEventListener('click', () => {
             window.location.reload();
         });
-    }
-
-    generateQRCode() {
-        const joinUrl = `${window.location.origin}/player.html?code=${this.gameCode}`;
-        document.getElementById('joinUrl').textContent = joinUrl;
-        
-        QRCode.toCanvas(document.createElement('canvas'), joinUrl, {
-            width: 200,
-            margin: 0,
-            color: { dark: '#000', light: '#fff' }
-        }, (error, canvas) => {
-            if (error) console.error(error);
-            document.getElementById('qrCode').innerHTML = '';
-            document.getElementById('qrCode').appendChild(canvas);
-        });
-    }
-
-    updateGameCodeDisplay() {
-        document.getElementById('gameCodeDisplay').textContent = this.gameCode;
     }
 
     updatePlayersDisplay() {
@@ -457,10 +494,12 @@ class AvalonHost {
 
     updateMissionTrack() {
         const container = document.getElementById('missionTokens');
-        const playerCount = Object.keys(this.gameState.players || {}).length;
+        if (!container) return;
+        
+        const playerCount = Object.keys(this.gameState?.players || {}).length;
         const config = AVALON.PLAYER_CONFIG[playerCount];
-        const results = this.gameState.missionResults || [];
-        const currentMission = this.gameState.currentMission || 0;
+        const results = this.gameState?.missionResults || [];
+        const currentMission = this.gameState?.currentMission || 0;
 
         if (!config) return;
 
@@ -483,7 +522,7 @@ class AvalonHost {
     }
 
     updateVoteTrack() {
-        const voteTrack = this.gameState.voteTrack || 0;
+        const voteTrack = this.gameState?.voteTrack || 0;
         document.querySelectorAll('.vote-token').forEach((token, i) => {
             token.classList.toggle('active', i < voteTrack);
         });
@@ -491,10 +530,12 @@ class AvalonHost {
 
     updatePlayersCircle() {
         const container = document.getElementById('playersCircle');
-        const players = this.gameState.players || {};
-        const currentKing = this.gameState.currentKing;
-        const selectedTeam = this.gameState.selectedTeam || [];
-        const playerOrder = this.gameState.playerOrder || Object.keys(players);
+        if (!container) return;
+        
+        const players = this.gameState?.players || {};
+        const currentKing = this.gameState?.currentKing;
+        const selectedTeam = this.gameState?.selectedTeam || [];
+        const playerOrder = this.gameState?.playerOrder || Object.keys(players);
 
         container.innerHTML = playerOrder.map(id => {
             const player = players[id];
@@ -514,7 +555,8 @@ class AvalonHost {
     }
 }
 
-// Initialize
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing AvalonHost...');
     new AvalonHost();
 });
