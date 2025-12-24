@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avalon - The Resistance</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body class="landing-page">
+    <div class="container">
+        <div class="logo">
+            <h1>⚔️ AVALON</h1>
+            <p class="subtitle">The Resistance</p>
+        </div>
+        
+        <div class="menu-options">
+            <button id="createGameBtn" class="btn btn-primary btn-large">
+                📺 Create Game (Host/TV)
+            </button>
+            <button id="joinGameBtn" class="btn btn-secondary btn-large">
+                📱 Join Game (Player)
+            </button>
+        </div>
+
+        <!-- Join Game Modal -->
+        <div id="joinModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Join Game</h2>
+                <input type="text" id="gameCodeInput" placeholder="Enter Game Code" maxlength="6">
+                <input type="text" id="playerNameInput" placeholder="Your Name" maxlength="15">
+                <div class="modal-buttons">
+                    <button id="confirmJoinBtn" class="btn btn-primary">Join</button>
+                    <button id="cancelJoinBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script>
+        document.getElementById('createGameBtn').addEventListener('click', () => {
+            const gameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            window.location.href = `host.html?code=${gameCode}`;
+        });
+
+        document.getElementById('joinGameBtn').addEventListener('click', () => {
+            document.getElementById('joinModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelJoinBtn').addEventListener('click', () => {
+            document.getElementById('joinModal').classList.add('hidden');
+        });
+
+        document.getElementById('confirmJoinBtn').addEventListener('click', () => {
+            const code = document.getElementById('gameCodeInput').value.toUpperCase();
+            const name = document.getElementById('playerNameInput').value.trim();
+            if (code && name) {
+                window.location.href = `player.html?code=${code}&name=${encodeURIComponent(name)}`;
+            }
+        });
+    </script>
+</body>
+</html>

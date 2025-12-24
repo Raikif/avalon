@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avalon - Host Display</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body class="host-page">
+    <div class="host-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>⚔️ AVALON</h1>
+            <div class="game-code-display">
+                Code: <span id="gameCodeDisplay">------</span>
+            </div>
+        </header>
+
+        <!-- Lobby Screen -->
+        <div id="lobbyScreen" class="screen">
+            <div class="lobby-layout">
+                <div class="qr-section">
+                    <h2>Scan to Join</h2>
+                    <div id="qrCode"></div>
+                    <p class="join-url" id="joinUrl"></p>
+                </div>
+                <div class="players-section">
+                    <h2>Players (<span id="playerCount">0</span>/10)</h2>
+                    <div id="playersList" class="players-grid"></div>
+                </div>
+            </div>
+            
+            <div class="role-settings">
+                <h3>Optional Roles</h3>
+                <div class="role-toggles">
+                    <label><input type="checkbox" id="useMerlin" checked disabled> Merlin</label>
+                    <label><input type="checkbox" id="useAssassin" checked disabled> Assassin</label>
+                    <label><input type="checkbox" id="usePercival"> Percival</label>
+                    <label><input type="checkbox" id="useMorgana"> Morgana</label>
+                    <label><input type="checkbox" id="useMordred"> Mordred</label>
+                    <label><input type="checkbox" id="useOberon"> Oberon</label>
+                </div>
+            </div>
+            
+            <button id="startGameBtn" class="btn btn-primary btn-large" disabled>
+                Start Game (Need 5-10 players)
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen hidden">
+            <!-- Mission Track -->
+            <div class="mission-track">
+                <h3>Missions</h3>
+                <div id="missionTokens" class="mission-tokens"></div>
+            </div>
+
+            <!-- Vote Track -->
+            <div class="vote-track">
+                <h3>Vote Track</h3>
+                <div id="voteTokens" class="vote-tokens">
+                    <span class="vote-token" data-vote="1">1</span>
+                    <span class="vote-token" data-vote="2">2</span>
+                    <span class="vote-token" data-vote="3">3</span>
+                    <span class="vote-token" data-vote="4">4</span>
+                    <span class="vote-token" data-vote="5">5</span>
+                </div>
+            </div>
+
+            <!-- Current Phase Display -->
+            <div id="phaseDisplay" class="phase-display">
+                <h2 id="phaseTitle">Team Selection</h2>
+                <p id="phaseDescription"></p>
+            </div>
+
+            <!-- Players Circle -->
+            <div id="playersCircle" class="players-circle"></div>
+
+            <!-- Team Selection Display -->
+            <div id="teamDisplay" class="team-display hidden">
+                <h3>Selected Team</h3>
+                <div id="selectedTeam" class="selected-team"></div>
+            </div>
+
+            <!-- Voting Results -->
+            <div id="voteResults" class="vote-results hidden">
+                <h3>Vote Results</h3>
+                <div class="vote-columns">
+                    <div class="approve-column">
+                        <h4>✓ Approve</h4>
+                        <div id="approveVotes"></div>
+                    </div>
+                    <div class="reject-column">
+                        <h4>✗ Reject</h4>
+                        <div id="rejectVotes"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mission Results -->
+            <div id="missionResults" class="mission-results hidden">
+                <h3>Mission Results</h3>
+                <div id="missionCards" class="mission-cards"></div>
+            </div>
+        </div>
+
+        <!-- Assassination Screen -->
+        <div id="assassinationScreen" class="screen hidden">
+            <h2>🗡️ Assassination Phase</h2>
+            <p>Good has won 3 missions! But the Assassin can still win for Evil by killing Merlin.</p>
+            <div id="assassinationTarget" class="assassination-target"></div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="screen hidden">
+            <div class="game-over-content">
+                <h2 id="winnerText"></h2>
+                <div id="roleReveal" class="role-reveal"></div>
+                <button id="newGameBtn" class="btn btn-primary btn-large">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/avalon-rules.js"></script>
+    <script src="js/host.js"></script>
+</body>
+</html>

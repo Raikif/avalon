@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Avalon - Player</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body class="player-page">
+    <div class="player-container">
+        <!-- Waiting Screen -->
+        <div id="waitingScreen" class="screen">
+            <div class="waiting-content">
+                <h2>⚔️ AVALON</h2>
+                <p class="player-name">Welcome, <span id="displayName">Player</span></p>
+                <div class="loader"></div>
+                <p>Waiting for host to start the game...</p>
+            </div>
+        </div>
+
+        <!-- Role Reveal Screen -->
+        <div id="roleScreen" class="screen hidden">
+            <div class="role-card" id="roleCard">
+                <div class="role-card-inner">
+                    <div class="role-card-front">
+                        <p>Tap to reveal your role</p>
+                    </div>
+                    <div class="role-card-back">
+                        <h2 id="roleName">Role</h2>
+                        <div id="roleIcon" class="role-icon"></div>
+                        <p id="roleTeam" class="role-team"></p>
+                        <div id="roleInfo" class="role-info"></div>
+                    </div>
+                </div>
+            </div>
+            <button id="readyBtn" class="btn btn-primary hidden">I'm Ready</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen hidden">
+            <!-- Player Status Bar -->
+            <div class="status-bar">
+                <span id="statusRole" class="status-role">Role</span>
+                <span id="statusPhase" class="status-phase">Phase</span>
+            </div>
+
+            <!-- Team Selection (King Only) -->
+            <div id="teamSelectionPanel" class="game-panel hidden">
+                <h3>👑 You are the King!</h3>
+                <p>Select <span id="teamSizeRequired">0</span> players for the mission:</p>
+                <div id="playerSelectList" class="player-select-list"></div>
+                <button id="confirmTeamBtn" class="btn btn-primary" disabled>Confirm Team</button>
+            </div>
+
+            <!-- Waiting for King -->
+            <div id="waitingKingPanel" class="game-panel hidden">
+                <h3>Waiting for King</h3>
+                <p><span id="currentKingName">King</span> is selecting the team...</p>
+                <div class="loader"></div>
+            </div>
+
+            <!-- Voting Panel -->
+            <div id="votingPanel" class="game-panel hidden">
+                <h3>Vote on Team</h3>
+                <div id="proposedTeam" class="proposed-team"></div>
+                <div class="vote-buttons">
+                    <button id="approveBtn" class="btn btn-approve">✓ Approve</button>
+                    <button id="rejectBtn" class="btn btn-reject">✗ Reject</button>
+                </div>
+            </div>
+
+            <!-- Waiting for Votes -->
+            <div id="waitingVotesPanel" class="game-panel hidden">
+                <h3>Waiting for Votes</h3>
+                <p>Other players are voting...</p>
+                <div class="loader"></div>
+            </div>
+
+            <!-- Mission Panel -->
+            <div id="missionPanel" class="game-panel hidden">
+                <h3>🎯 You're on the Mission!</h3>
+                <p>Choose your action:</p>
+                <div class="mission-buttons">
+                    <button id="successBtn" class="btn btn-success">✓ Success</button>
+                    <button id="failBtn" class="btn btn-fail hidden">✗ Fail</button>
+                </div>
+            </div>
+
+            <!-- Waiting for Mission -->
+            <div id="waitingMissionPanel" class="game-panel hidden">
+                <h3>Mission in Progress</h3>
+                <p>Waiting for mission team...</p>
+                <div class="loader"></div>
+            </div>
+
+            <!-- Assassination Panel (Assassin Only) -->
+            <div id="assassinationPanel" class="game-panel hidden">
+                <h3>🗡️ Assassination</h3>
+                <p>Choose who you think is Merlin:</p>
+                <div id="assassinTargetList" class="player-select-list"></div>
+                <button id="confirmKillBtn" class="btn btn-fail">Assassinate</button>
+            </div>
+
+            <!-- Waiting for Assassination -->
+            <div id="waitingAssassinPanel" class="game-panel hidden">
+                <h3>Assassination Phase</h3>
+                <p>The Assassin is choosing their target...</p>
+                <div class="loader"></div>
+            </div>
+
+            <!-- Game Over Panel -->
+            <div id="gameOverPanel" class="game-panel hidden">
+                <h2 id="resultText"></h2>
+                <p id="yourRoleReveal"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/avalon-rules.js"></script>
+    <script src="js/player.js"></script>
+</body>
+</html>
