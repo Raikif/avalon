@@ -6,7 +6,6 @@
     <title>Avalon - Host Display</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body class="host-page">
     <div class="host-container">
@@ -23,7 +22,10 @@
             <div class="lobby-layout">
                 <div class="qr-section">
                     <h2>Scan to Join</h2>
-                    <div id="qrCode"></div>
+                    <div id="qrCode">
+                        <p>Loading QR Code...</p>
+                    </div>
+                    <p class="game-code-big" id="gameCodeBig"></p>
                     <p class="join-url" id="joinUrl"></p>
                 </div>
                 <div class="players-section">
@@ -123,8 +125,11 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    
+    <!-- QR Code Library - menggunakan API -->
     <script src="js/firebase-config.js"></script>
     <script src="js/avalon-rules.js"></script>
     <script src="js/host.js"></script>
