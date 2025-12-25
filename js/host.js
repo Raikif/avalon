@@ -46,23 +46,24 @@ class AvalonHost {
     }
 
     generateQRCode() {
-        const baseUrl = this.getBaseUrl();
-        const joinUrl = `${baseUrl}/player.html?code=${this.gameCode}`;
-        
-        console.log('Join URL:', joinUrl);
+    const baseUrl = this.getBaseUrl();
+    // Hanya kirim game code, tanpa nama
+    const joinUrl = `${baseUrl}/player.html?code=${this.gameCode}`;
+    
+    console.log('Join URL:', joinUrl);
 
-        document.getElementById('joinUrl').textContent = joinUrl;
-        
-        const gameCodeBig = document.getElementById('gameCodeBig');
-        if (gameCodeBig) {
-            gameCodeBig.textContent = `Code: ${this.gameCode}`;
-        }
-
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinUrl)}`;
-        
-        const qrContainer = document.getElementById('qrCode');
-        qrContainer.innerHTML = `<img src="${qrApiUrl}" alt="QR Code" style="border-radius: 8px;">`;
+    document.getElementById('joinUrl').textContent = joinUrl;
+    
+    const gameCodeBig = document.getElementById('gameCodeBig');
+    if (gameCodeBig) {
+        gameCodeBig.textContent = `Code: ${this.gameCode}`;
     }
+
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinUrl)}`;
+    
+    const qrContainer = document.getElementById('qrCode');
+    qrContainer.innerHTML = `<img src="${qrApiUrl}" alt="QR Code" style="border-radius: 8px;">`;
+}
 
     updateGameCodeDisplay() {
         document.getElementById('gameCodeDisplay').textContent = this.gameCode;
@@ -591,3 +592,4 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing AvalonHost...');
     new AvalonHost();
 });
+
