@@ -9,13 +9,37 @@
 </head>
 <body class="player-page">
     <div class="player-container">
+        
+        <!-- Join Screen (Input Nama) -->
+        <div id="joinScreen" class="screen">
+            <div class="join-content">
+                <h2>⚔️ AVALON</h2>
+                <p class="game-code-info">Game Code: <span id="displayGameCode">------</span></p>
+                
+                <div class="join-form">
+                    <label for="nameInput">Enter Your Name</label>
+                    <input 
+                        type="text" 
+                        id="nameInput" 
+                        placeholder="Your name..." 
+                        maxlength="15"
+                        autocomplete="off"
+                    >
+                    <button id="joinGameBtn" class="btn btn-primary btn-large" disabled>
+                        Join Game
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Waiting Screen -->
-        <div id="waitingScreen" class="screen">
+        <div id="waitingScreen" class="screen hidden">
             <div class="waiting-content">
                 <h2>⚔️ AVALON</h2>
-                <p class="player-name">Welcome, <span id="displayName">Player</span></p>
+                <p class="player-name">Welcome, <span id="displayName">Player</span>!</p>
                 <div class="loader"></div>
                 <p>Waiting for host to start the game...</p>
+                <p class="player-count-info">Players: <span id="playerCountInfo">0</span></p>
             </div>
         </div>
 
